@@ -1,11 +1,13 @@
 const express = require('express');
 const path = require('path');
 const hbs = require('express-handlebars');
+const multer = require('multer');
 
 const app = express();
 
 app.engine('.hbs', hbs());
 app.set('view engine', '.hbs');
+const upload = multer();
 
 app.use(express.static(path.join(__dirname, '/public')));
 app.use(express.urlencoded({ extended: false }));
@@ -16,7 +18,7 @@ app.get('/hello/:name', (req, res) => {
 });
 
 app.get('/about', (req, res) => {
-  res.render('about.hbs', { layout: 'dark' });
+  res.render('about.hbs');
 });
 
 app.use((req, res, next) => {
@@ -39,19 +41,14 @@ app.get('/history', (req, res) => {
   res.render('history');
 });
 
-app.post('/contact/send-message', (req, res) => {
-
-  const { author, sender, title, message, image } = req.body;
-  if(author && sender && title && message && image) {
-    res.render('contact', { isSent: true, image: image });
+app.post('/contact/send-message', upload.single("image"), (req, res) => {
+  const imageFile = req.file;
+  const { author, sender, title, message } = req.body;
+  if(author && sender && title && message && imageFile) {
+    res.render('contact', { isSent: true, imageName:imageFile.originalname });
   }
   else {
-    if(!image){
-      res.render('contact', { isNoImage: true });
-    }
-    else{
-      res.render('contact', { isError: true, image: image });
-    }
+    res.render('contact', { isError: true, imageName:imageFile.originalname  });
   }
 });
 
